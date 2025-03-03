@@ -19,6 +19,27 @@ def print_rank(title, data):
     for i, (player, count) in enumerate(sorted_data, 1):
         print(f"{i}. {player}: {count}次")
 
+def show_statistics(players, score_board, win_count, luck_card_count):
+    """显示当前统计信息"""
+    print("\n当前得分：")
+    for player in players:
+        total = sum(score_board[player].values())
+        print(f"玩家 {player}: {total}分")
+
+    # 得分详情矩阵
+    print("\n得分详情矩阵：")
+    header = " " * 4 + "".join([f"{p:^6}" for p in players])
+    print(header)
+    for p in players:
+        row = [f"{score_board[p][op]:^6}" if op != p else "  --  " for op in players]
+        print(f"{p} | " + "".join(row))
+
+    # 赢家次数排行榜
+    print_rank("赢家次数排行榜", win_count)
+
+    # 运气牌接收方次数排行榜
+    print_rank("运气牌接收方次数排行榜", luck_card_count)
+
 def initialize_game():
     """初始化游戏设置"""
     while True:
@@ -47,7 +68,7 @@ def initialize_game():
         current_players = players.copy()  # 3人游戏无候补
         current_waiting = None
     else:
-        players = ['bb', 'mm', 'pw', 'wl']
+        players = ['mm','wl','bb','pw']
         current_players = players[:3]  # 初始场上玩家
         current_waiting = players[3]   # 初始候补玩家
 
@@ -67,25 +88,30 @@ def main():
         if current_waiting:
             print("当前候补玩家:", current_waiting)
         
-        # 输入赢家（自动转小写）
-        winner = input("\n请输入本局赢家（输入q结束游戏）: ").lower()
-        if winner == 'q':
+        # 输入赢家或查看统计信息
+        action = input("\n请输入本局赢家（输入q结束游戏，输入stats查看统计）: ").lower()
+        if action == 'q':
             break
-        if winner not in current_players:
-            print(f"错误：玩家 {winner} 不在场上！")
+        if action == 'stats':
+            show_statistics(players, score_board, win_count, luck_card_count)
+            continue
+        
+        # 检查赢家是否有效
+        if action not in current_players:
+            print(f"错误：玩家 {action} 不在场上！")
             continue
 
         # 更新赢家次数
-        win_count[winner] += 1
+        win_count[action] += 1
 
         # 处理基础得分
-        losers = [p for p in current_players if p != winner]
-        print(f"\n请依次输入每个输家给 {winner} 的分数：")
+        losers = [p for p in current_players if p != action]
+        print(f"\n请依次输入每个输家给 {action} 的分数：")
         for loser in losers:
             while True:
                 try:
-                    points = int(input(f"{loser} 给 {winner} 的分数: "))
-                    process_transaction(loser, winner, points, score_board)
+                    points = int(input(f"{loser} 给 {action} 的分数: "))
+                    process_transaction(loser, action, points, score_board)
                     break
                 except:
                     print("输入无效，请重新输入数字")
@@ -127,30 +153,12 @@ def main():
 
         # 玩家轮换（仅4人游戏）
         if current_waiting:
-            current_players.remove(winner)
+            current_players.remove(action)
             current_players.append(current_waiting)
-            current_waiting = winner
+            current_waiting = action
 
     # 最终结果展示
-    print("\n最终得分：")
-    for player in players:
-        total = sum(score_board[player].values())
-        print(f"玩家 {player}: {total}分")
-
-    # 得分详情矩阵
-    print("\n得分详情矩阵：")
-    header = " " * 4 + "".join([f"{p:^6}" for p in players])
-    print(header)
-    
-    for p in players:
-        row = [f"{score_board[p][op]:^6}" if op != p else "  --  " for op in players]
-        print(f"{p} | " + "".join(row))
-
-    # 赢家次数排行榜
-    print_rank("赢家次数排行榜", win_count)
-
-    # 运气牌接收方次数排行榜
-    print_rank("运气牌接收方次数排行榜", luck_card_count)
+    show_statistics(players, score_board, win_count, luck_card_count)
 
 if __name__ == "__main__":
     main()
